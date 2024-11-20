@@ -67,6 +67,9 @@ class OduyoAdminPanelProvider extends PanelProvider
                     ->enableTwoFactorAuthentication(
                         force: true
                     )
-            );
+            )
+            ->resources([
+                config('filament-logger.activity_resource')
+            ]);
     }
 }
