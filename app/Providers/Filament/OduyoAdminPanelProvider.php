@@ -16,7 +16,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Jeffgreco13\FilamentBreezy\BreezyCore;
 
 class OduyoAdminPanelProvider extends PanelProvider
 {
@@ -53,6 +55,18 @@ class OduyoAdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->plugin(
+                BreezyCore::make()
+                    ->myProfile(
+                        navigationGroup: 'Settings'
+                    )
+                    ->passwordUpdateRules(
+                        rules: [Password::default()->mixedCase()->min(8)->uncompromised(3)],
+                    )
+                    ->enableTwoFactorAuthentication(
+                        force: true
+                    )
+            );
     }
 }
