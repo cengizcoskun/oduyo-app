@@ -60,9 +60,9 @@ class Settings extends Page
                                 TextInput::make('bank_name'),
                                 TextInput::make('merchant_id'),
                                 TextInput::make('prov_user_id'),
-                                TextInput::make('provision_password'),
+                                TextInput::make('provision_password')->password(),
                                 TextInput::make('terminal_id'),
-                                TextInput::make('store_key'),
+                                TextInput::make('store_key')->password(),
                                 TextInput::make('pos_url'),
                             ]),
                     ])
