@@ -7,7 +7,7 @@ use Omnipay\Common\CreditCard;
 use App\Models\Settings;
 use Random\RandomException;
 
-class Payment
+class Capture
 {
     public $settings;
 
@@ -30,6 +30,7 @@ class Payment
             'amount' => $this->request->totalAmount,
             'currency' => 'TRY',
             'installment' => '',
+            'clientIp' => 'xxx',
         ];
 
         return $this->provideMergedParams($params);

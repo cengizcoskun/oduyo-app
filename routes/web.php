@@ -13,3 +13,11 @@ Route::get('/', function () {
 });
 
 Route::post('/payment', [PaymentController::class, 'processPayment']);
+
+Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
+
+
+Route::match(['GET','POST'],'/payment/error', [PaymentController::class, 'error']);
+
+// Route::post('/payment/error', [PaymentController::class, 'error']);
+

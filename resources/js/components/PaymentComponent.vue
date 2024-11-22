@@ -1,7 +1,15 @@
 <template>
     <div class="payment-container">
         <h1 class="title">Payment Page</h1>
-        <form @submit.prevent="submitPayment" class="payment-form">
+
+        <!-- Loading Animation -->
+        <div v-if="isProcessing" class="loading-overlay">
+            <div class="spinner"></div>
+            <p>Processing your payment, please wait...</p>
+        </div>
+
+        <form @submit.prevent="submitPayment" class="payment-form" id="payment-form">
+            <input type="hidden" name="_token" :value="csrf">
             <div class="form-group">
                 <label for="cardholder_name">Cardholder Name: (Yasin Cengiz Coskun)</label>
                 <input type="text" id="cardholder_name" v-model="cardholder_name" placeholder="Yasin Cengiz Coşkun" />
@@ -132,6 +140,42 @@ input:focus {
     font-weight: bold;
     text-align: center;
 }
+
+/* Loading Spinner */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #ccc;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #555;
+}
 </style>
 
 
@@ -151,6 +195,9 @@ export default {
         };
     },
     computed: {
+        csrf() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        },
         isValidName() {
             return this.cardholder_name.length >= 3;
         },
@@ -169,33 +216,68 @@ export default {
     },
     methods: {
         async submitPayment() {
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
             this.isProcessing = true;
             this.message = '';
 
             if (!this.isFormValid) {
                 this.message = 'Please fill in all fields correctly.';
             } else {
-
                 try {
-                    const response = await axios.post('/payment', {
-                        cc_no: this.cc_no,
-                        cc_month: this.cc_month,
-                        cc_year: this.cc_year,
-                        cc_cvc: this.cc_cvc,
-                        threeD_secure: this.threeD_secure,
-                        totalAmount: this.totalAmount
-                    });
+                    if (this.threeD_secure) {
+                        const formData = {
+                            'cardholder_name': this.cardholder_name,
+                            'cc_no': this.cc_no,
+                            'cc_month': this.cc_month,
+                            'cc_year': this.cc_year,
+                            'cc_cvc': this.cc_cvc,
+                            'threeD_secure': this.threeD_secure,
+                            'totalAmount': this.totalAmount,
+                            '_token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        };
 
-                    console.log(response.data);
+                        const form = document.createElement("form");
+                        form.setAttribute("method", "POST");
+                        form.setAttribute("action", '/payment');
 
-                    if (response.data.success) {
-                        this.message = 'Ödeme başarılı!';
+                        for (const key in formData) {
+                            if (Object.hasOwnProperty.call(formData, key)) {
+                                const input = document.createElement("input");
+                                input.setAttribute("type", "hidden");
+                                input.setAttribute("name", key);
+                                input.setAttribute("value", formData[key]);
+                                form.appendChild(input);
+                            }
+                        }
+
+                        document.body.appendChild(form);
+                        form.submit();
+
+                        return;
                     } else {
-                        // this.message = 'Ödeme başarısız.';
-                        this.message = response.errorMessage;
+
+                        const response = await axios.post('/payment', {
+                            cardholder_name: this.cardholder_name,
+                            cc_no: this.cc_no,
+                            cc_month: this.cc_month,
+                            cc_year: this.cc_year,
+                            cc_cvc: this.cc_cvc,
+                            threeD_secure: this.threeD_secure,
+                            totalAmount: this.totalAmount
+                        });
+
+                        console.log(response.data);
+
+                        if (response.data.success) {
+                            this.message = 'Ödeme başarılı!';
+                        } else {
+                            // this.message = 'Ödeme başarısız.';
+                            this.message = 'Error Code: ' + response.data.errorCode + ' - Error Message: ' + response.data.message;
+                        }
                     }
                 } catch (err) {
-                    this.message = 'Bir hata oluştu: ' + err.message;
+                    this.message = 'Error!: ' + err.message;
                 }
             }
 
