@@ -10,6 +10,11 @@ Proje dizininde şu komutu çalıştırıyoruz: `sail up -d`
 
 Son olarak frontend dosyalarını derliyoruz: `sail npm run build`
 
+User create: `sail artisan make:filament-user`
+
+
+-----------------------
+
 Case Study: Laravel Tabanlı Ödeme Sistemi ve Garanti Sanal POS Entegrasyonu
 
 ### Amaç
